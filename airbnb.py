@@ -94,6 +94,6 @@ airbnb['minimum_nights'] = airbnb['minimum_nights'].fillna(1)
 
 print(airbnb[airbnb['number_of_reviews'].isna()][['price', 'star_rating', 'available_days_in_future']].describe())
 
-
+# just wanted to make sure the git repo was cloned
 
 
