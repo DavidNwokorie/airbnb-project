@@ -92,7 +92,6 @@ airbnb['service_fee'] = airbnb['service_fee'].fillna(0)
 airbnb['minimum_nights_missing'] = airbnb['minimum_nights'].isna().astype(int)
 airbnb['minimum_nights'] = airbnb['minimum_nights'].fillna(1)
 
-print(airbnb[airbnb['number_of_reviews'].isna()][['price', 'star_rating', 'available_days_in_future']].describe())
 
 
 
