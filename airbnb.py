@@ -93,6 +93,6 @@ airbnb['minimum_nights_missing'] = airbnb['minimum_nights'].isna().astype(int)
 airbnb['minimum_nights'] = airbnb['minimum_nights'].fillna(1)
 
 
-
+# just wanted to make sure the git repo was cloned
 
 
