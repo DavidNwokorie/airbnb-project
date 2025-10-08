@@ -89,9 +89,24 @@ airbnb['service_fee_missing'] = airbnb['service_fee'].isna().astype(int)
 airbnb['service_fee'] = airbnb['service_fee'].fillna(0)
 
 
+# filling missing data for minimum nights
+# made a seperate dummy column so the model can recognize the original, i went ahead a filled the missing data to 1 so those lisings will have a minimum of 1 night
 airbnb['minimum_nights_missing'] = airbnb['minimum_nights'].isna().astype(int)
 airbnb['minimum_nights'] = airbnb['minimum_nights'].fillna(1)
 
+
+# filling missing data for number of reviews
+# i just went ahead and filled it in with 0, assuming these listings are brand new and the empty column are not random
+airbnb['number_of_reviews_missing'] = airbnb['number_of_reviews'].isna().astype(int)
+airbnb['number_of_reviews'] = airbnb['number_of_reviews'].fillna(0)
+
+
+airbnb.drop("last_review_time")
+airbnb['last_review_misisng'] = airbnb['last_review_time'].isna().astype(int)
+
+
+airbnb['reviews_per_month_missing'] = airbnb['reviews_per_month'].isna().astype(int)
+airbnb['reviews_per_month'] = airbnb['reviews_per_month'].fillna(0)
 
 
 
