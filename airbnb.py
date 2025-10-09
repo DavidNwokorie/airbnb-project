@@ -1,6 +1,14 @@
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import seaborn as sns
+import nltk
+from wordcloud import WordCloud
+from wordcloud import STOPWORDS
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.sentiment import SentimentIntensityAnalyzer
+
 
 airbnb = pd.read_csv("AirbnbSample6.csv")
 
@@ -22,7 +30,7 @@ print(airbnb['neighborhood'].unique())
 # basic cleaning
 # dropped irrelevant columns
 # kept same column names
-airbnb = airbnb.drop(['id','name','country','house_rules'], axis=1)
+airbnb = airbnb.drop(['id','name','country',], axis=1)
 print(airbnb.info())
 print(airbnb.head())
 
@@ -36,6 +44,8 @@ airbnb[mv_hiv] = airbnb[mv_hiv].fillna('UNCONFIRMED')
 # filling neighborhood misinng values with "N/A"
 mv_neighborhood = "neighborhood"
 airbnb[mv_neighborhood] = airbnb[mv_neighborhood].fillna('N/A')
+airbnb['neighborhood'] = airbnb['neighborhood'].replace('manhatan', 'Manhattan')
+
 
 # filling instant bookings misinng values with "N/A"
 mv_ib = "instant_bookable"
@@ -104,7 +114,7 @@ airbnb['number_of_reviews'] = airbnb['number_of_reviews'].fillna(0)
 # filling missing data for last review time
 # exact dates not needed so turned into a binary dummy, meaning if it has a date it was reviewed, if not it wasn't reviewed
 # likewise dropped the original column after because it is not needed
-airbnb['last_review_misisng'] = airbnb['last_review_time'].isna().astype(int)
+airbnb['last_review_missing'] = airbnb['last_review_time'].isna().astype(int)
 airbnb = airbnb.drop(columns=['last_review_time'])
 
 
@@ -136,3 +146,94 @@ airbnb.loc[airbnb['available_days_in_future'] < 0, 'available_days_in_future'] =
 airbnb['available_days_missing'] = airbnb['available_days_in_future'].isna().astype(int)
 airbnb['available_days_in_future'] = airbnb['available_days_in_future'].fillna(0)
 print(airbnb['available_days_in_future'].describe())
+
+
+
+# EDA and VISUALIZATIONS
+
+# airbnb.info()
+# airbnb.describe(include='all')
+
+# corr = airbnb.corr(numeric_only=True)
+# plt.figure(figsize=(10, 6))
+# sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f')
+# plt.title('Correlation Heatmap of Numeric Variables')
+# plt.show()
+
+
+# Average reviews per month (demand indicator) by neighborhood
+
+### IMPORTANT: look at the differnce between the graphs that have both "Manhattan" and "manhatan"
+demand_by_neighborhood = (
+    airbnb.groupby('neighborhood')['reviews_per_month']
+    .mean()
+    .sort_values(ascending=False)
+)
+
+plt.figure(figsize=(10,5))
+demand_by_neighborhood.plot(kind='bar', color='mediumseagreen')
+plt.title('Average Monthly Reviews by Neighborhood')
+plt.ylabel('Average Reviews per Month')
+plt.xlabel('Neighborhood')
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+
+
+
+# Scatter Plot
+nb_stats = airbnb.groupby('neighborhood').agg({
+    'price': 'mean',
+    'reviews_per_month': 'mean'
+}).reset_index()
+
+plt.figure(figsize=(7,5))
+sns.scatterplot(x='price', y='reviews_per_month', hue='neighborhood', data=nb_stats, s=80)
+plt.title('Neighborhood Price vs. Booking Demand')
+plt.xlabel('Average Price ($)')
+plt.ylabel('Average Reviews per Month')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+
+
+
+plt.figure(figsize=(7,5))
+sns.scatterplot(x='available_days_in_future', y='reviews_per_month', data=airbnb, alpha=0.6)
+plt.title('Availability vs. Booking Demand')
+plt.xlabel('Available Days in Future')
+plt.ylabel('Reviews per Month')
+plt.show()
+
+
+
+# TEXT MINING
+
+nltk.download('vader_lexicon')
+text_data = airbnb['house_rules'].dropna().astype(str)
+text = " ".join(text_data)
+
+airbnb["house_rules"] = airbnb["house_rules"].str.strip()
+airbnb["house_rules"] = airbnb["house_rules"].str.replace(r'[^a-zA-Z0-9\s]', '', regex=True)
+
+
+
+wordcloud = WordCloud(stopwords=STOPWORDS, background_color="white", max_words = 20, width=800, height=400).generate(text)
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('Common Terms in Airbnb House Rules')
+plt.show()
+
+
+
+SentimentAnalysis = SentimentIntensityAnalyzer()
+
+airbnb['sentiment_score'] = airbnb['house_rules'].fillna('').apply(lambda x: SentimentAnalysis.polarity_scores(str(x))['compound'])
+print(airbnb['sentiment_score'].describe())
+plt.hist(airbnb['sentiment_score'], bins=20, color='lightblue', edgecolor='black')
+plt.title('Sentiment Distribution of Airbnb House Rules')
+plt.xlabel('Sentiment Score (-1 = Negative, 1 = Positive)')
+plt.ylabel('Count')
+plt.show()
+
+print(airbnb['house_rules'].head(113))
