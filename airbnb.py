@@ -182,6 +182,10 @@ plt.show()
 
 
 # Scatter Plot
+# There isn’t a clear linear relationship between price and booking demand.
+# Some higher-priced neighborhoods (like Staten Island) show relatively high review frequency,
+# While others (like Manhattan and Brooklyn) have lower demand despite higher prices.
+# This suggests that factors beyond price, such as location and listing type, drive booking activity
 nb_stats = airbnb.groupby('neighborhood').agg({
     'price': 'mean',
     'reviews_per_month': 'mean'
@@ -196,7 +200,9 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.show()
 
 
-
+# Scatter Plot 
+# Listings with high booking demand (many reviews per month) tend to have lower availability,
+# While listings with many available days are less frequently booked
 plt.figure(figsize=(7,5))
 sns.scatterplot(x='available_days_in_future', y='reviews_per_month', data=airbnb, alpha=0.6)
 plt.title('Availability vs. Booking Demand')
@@ -206,8 +212,7 @@ plt.show()
 
 
 
-# TEXT MINING
-
+# Text Mining
 nltk.download('vader_lexicon')
 text_data = airbnb['house_rules'].dropna().astype(str)
 text = " ".join(text_data)
@@ -216,7 +221,7 @@ airbnb["house_rules"] = airbnb["house_rules"].str.strip()
 airbnb["house_rules"] = airbnb["house_rules"].str.replace(r'[^a-zA-Z0-9\s]', '', regex=True)
 
 
-
+# Word Cloud Visualization
 wordcloud = WordCloud(stopwords=STOPWORDS, background_color="white", max_words = 20, width=800, height=400).generate(text)
 plt.figure(figsize=(10, 5))
 plt.imshow(wordcloud, interpolation='bilinear')
@@ -225,7 +230,7 @@ plt.title('Common Terms in Airbnb House Rules')
 plt.show()
 
 
-
+# Sentimnet Analysis Visualization
 SentimentAnalysis = SentimentIntensityAnalyzer()
 
 airbnb['sentiment_score'] = airbnb['house_rules'].fillna('').apply(lambda x: SentimentAnalysis.polarity_scores(str(x))['compound'])
@@ -236,4 +241,4 @@ plt.xlabel('Sentiment Score (-1 = Negative, 1 = Positive)')
 plt.ylabel('Count')
 plt.show()
 
-print(airbnb['house_rules'].head(113))
+
